@@ -5,7 +5,7 @@
 
 create extension if not exists "pgcrypto";
 
-create type app_role as enum ('membre','chef_projet','gestionnaire_portfolio','directeur_programme','pmo');
+create type app_role as enum ('membre','chef_projet','gestionnaire_portfolio','directeur_programme','pmo','admin');
 create type rag_status as enum ('green','amber','red');
 create type work_status as enum ('todo','doing','review','done','open','pending','accepted','rejected','watch','planned','at_risk');
 
@@ -166,23 +166,23 @@ $$;
 create or replace function is_project_member(pid uuid)
 returns boolean language sql stable security definer as $$
   select exists(select 1 from project_members where project_id=pid and user_id=auth.uid())
-     or current_app_role() in ('gestionnaire_portfolio','directeur_programme','pmo');
+     or current_app_role() in ('gestionnaire_portfolio','directeur_programme','pmo','admin');
 $$;
 create or replace function can_manage_project()
 returns boolean language sql stable security definer as $$
-  select current_app_role() in ('chef_projet','directeur_programme','pmo');
+  select current_app_role() in ('chef_projet','directeur_programme','pmo','admin');
 $$;
 create or replace function can_manage_portfolio()
 returns boolean language sql stable security definer as $$
-  select current_app_role() in ('gestionnaire_portfolio','directeur_programme','pmo');
+  select current_app_role() in ('gestionnaire_portfolio','directeur_programme','pmo','admin');
 $$;
-create or replace function is_pmo()
+create or replace function is_admin()
 returns boolean language sql stable security definer as $$
-  select current_app_role()='pmo';
+  select current_app_role()='admin';
 $$;
 
-create policy "profiles read self" on profiles for select using (id=auth.uid() or is_pmo());
-create policy "profiles update self" on profiles for update using (id=auth.uid() or is_pmo());
+create policy "profiles read self" on profiles for select using (id=auth.uid() or is_admin());
+create policy "profiles update self" on profiles for update using (id=auth.uid() or is_admin());
 
 create policy "portfolio read" on portfolios for select using (auth.uid() is not null);
 create policy "portfolio write" on portfolios for all using (can_manage_portfolio()) with check (can_manage_portfolio());
@@ -194,22 +194,22 @@ create policy "membership read" on project_members for select using (user_id=aut
 create policy "membership write" on project_members for all using (can_manage_project()) with check (can_manage_project());
 
 create policy "tasks read" on tasks for select using (is_project_member(project_id));
-create policy "tasks write" on tasks for all using (is_project_member(project_id) and current_app_role() in ('membre','chef_projet','directeur_programme','pmo')) with check (is_project_member(project_id));
+create policy "tasks write" on tasks for all using (is_project_member(project_id) and current_app_role() in ('membre','chef_projet','directeur_programme','pmo','admin')) with check (is_project_member(project_id));
 create policy "milestones read" on milestones for select using (is_project_member(project_id));
 create policy "milestones write" on milestones for all using (can_manage_project()) with check (can_manage_project());
 create policy "risks read" on risks for select using (is_project_member(project_id));
 create policy "risks write" on risks for all using (can_manage_project()) with check (can_manage_project());
 create policy "decisions read" on decisions for select using (is_project_member(project_id));
-create policy "decisions write" on decisions for all using (current_app_role() in ('directeur_programme','pmo')) with check (current_app_role() in ('directeur_programme','pmo'));
+create policy "decisions write" on decisions for all using (current_app_role() in ('directeur_programme','pmo','admin')) with check (current_app_role() in ('directeur_programme','pmo','admin'));
 create policy "actions read" on actions for select using (is_project_member(project_id));
 create policy "actions write" on actions for all using (is_project_member(project_id)) with check (is_project_member(project_id));
 create policy "resources read" on resources for select using (auth.uid() is not null);
-create policy "resources write" on resources for all using (is_pmo()) with check (is_pmo());
+create policy "resources write" on resources for all using (is_admin()) with check (is_admin());
 create policy "comments read" on comments for select using (auth.uid() is not null);
 create policy "comments write" on comments for insert with check (auth.uid() is not null);
-create policy "views read" on views for select using (created_by=auth.uid() or is_pmo());
-create policy "views write" on views for all using (created_by=auth.uid() or is_pmo()) with check (created_by=auth.uid() or is_pmo());
-create policy "audit read" on audit for select using (is_pmo() or current_app_role() in ('directeur_programme','gestionnaire_portfolio'));
+create policy "views read" on views for select using (created_by=auth.uid() or is_admin());
+create policy "views write" on views for all using (created_by=auth.uid() or is_admin()) with check (created_by=auth.uid() or is_admin());
+create policy "audit read" on audit for select using (is_admin() or current_app_role() in ('directeur_programme','gestionnaire_portfolio','admin'));
 create policy "audit insert" on audit for insert with check (auth.uid() is not null);
 
 -- Seed facultatif à adapter après création d'utilisateurs réels.
