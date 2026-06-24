@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProjectFlow Pro V2.1</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="appShell" class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="mark">PF</span><div><strong>ProjectFlow</strong><small>Pro V2.1</small></div></div>
+      <nav id="nav"></nav>
+      <div class="connection-card" id="connectionCard"></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Gestion de projet augmentée</p>
+          <h1 id="pageTitle">Connexion</h1>
+        </div>
+        <div class="top-actions">
+          <select id="projectSwitcher" title="Projet actif"></select>
+          <button id="seedBtn" class="ghost">Seed démo</button>
+          <button id="exportBtn" class="ghost">Exporter</button>
+          <button id="logoutBtn" class="danger ghost">Déconnexion</button>
+        </div>
+      </header>
+      <section id="view" class="view"></section>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="supabase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
